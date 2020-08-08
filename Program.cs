@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Packaging;
+using System.Linq;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace packages
 {
@@ -8,8 +12,8 @@ namespace packages
     {
         static void Main(string[] args)
         {
-            //string fileName = "./data/60489.vsdx";
-            string fileName = "data/hello-world-unsigned.docx";
+            string fileName = "./data/60489.vsdx";
+            //string fileName = "data/hello-world-unsigned.docx";
             try
             {
                 Console.WriteLine("Opening the Package in file \"{0}\" ...", fileName);
@@ -19,7 +23,22 @@ namespace packages
                 using (Package fPackage = Package.Open(
                     fileName, FileMode.Open, FileAccess.Read))
                 {
-                    IteratePackageParts(fPackage);
+                    // we need this only to get info or for debugging / testing
+                    //IteratePackageParts(fPackage);
+
+                    // Get a reference to the Visio Document part contained in the file package.
+                    PackagePart documentPart = GetPackagePart(fPackage,
+                        "http://schemas.microsoft.com/visio/2010/relationships/document");
+                    // Get a reference to the collection of pages in the document, 
+                    // and then to the first page in the document.
+                    PackagePart pagesPart = GetPackagePart(fPackage, documentPart,
+                        "http://schemas.microsoft.com/visio/2010/relationships/pages");
+                    PackagePart pagePart = GetPackagePart(fPackage, pagesPart,
+                        "http://schemas.microsoft.com/visio/2010/relationships/page");
+                    // Open the XML from the Page Contents part.
+                    XDocument pageXML = GetXMLFromPart(pagePart);
+                    // save the XML document representing the first page as XML file
+                    pageXML.Save("./data/page1.xml");
                 }
             }
             catch (Exception err)
@@ -58,6 +77,60 @@ namespace packages
                 }
             }
         } // public static void IteratePackageParts(Package package)
+
+        // get a specific PackagePart by its PackageRelationship (without having to iterate over all of the PackageParts)
+        private static PackagePart GetPackagePart(Package filePackage, string relationship)
+        {
+
+            // Use the namespace that describes the relationship 
+            // to get the relationship.
+            PackageRelationship packageRel =
+                filePackage.GetRelationshipsByType(relationship).FirstOrDefault();
+            PackagePart part = null;
+            // If the Visio file package contains this type of relationship with 
+            // one of its parts, return that part.
+            if (packageRel != null)
+            {
+                // Clean up the URI using a helper class and then get the part.
+                Uri docUri = PackUriHelper.ResolvePartUri(
+                    new Uri("/", UriKind.Relative), packageRel.TargetUri);
+                part = filePackage.GetPart(docUri);
+            }
+            return part;
+        } // private static PackagePart GetPackagePart(Package filePackage, string relationship)
+
+        // get a specific PackagePart by its PackageRelationship to another PackagePart
+        private static PackagePart GetPackagePart(Package filePackage, PackagePart sourcePart, string relationship)
+        {
+            // This gets only the first PackagePart that shares the relationship
+            // with the PackagePart passed in as an argument. You can modify the code
+            // here to return a different PackageRelationship from the collection.
+            PackageRelationship packageRel =
+                sourcePart.GetRelationshipsByType(relationship).FirstOrDefault();
+            PackagePart relatedPart = null;
+            if (packageRel != null)
+            {
+                // Use the PackUriHelper class to determine the URI of PackagePart
+                // that has the specified relationship to the PackagePart passed in
+                // as an argument.
+                Uri partUri = PackUriHelper.ResolvePartUri(
+                    sourcePart.Uri, packageRel.TargetUri);
+                relatedPart = filePackage.GetPart(partUri);
+            }
+            return relatedPart;
+        } // private static PackagePart GetPackagePart(Package filePackage, PackagePart sourcePart, string relationship)
+
+        // get the XML document in a package part
+        private static XDocument GetXMLFromPart(PackagePart packagePart)
+        {
+            XDocument partXml = null;
+            // Open the packagePart as a stream and then 
+            // open the stream in an XDocument object.
+            Stream partStream = packagePart.GetStream();
+            partXml = XDocument.Load(partStream);
+            return partXml;
+        } // private static XDocument GetXMLFromPart(PackagePart packagePart)
+
 
         //  --------------------------- CopyStream ---------------------------
         /// <summary>
