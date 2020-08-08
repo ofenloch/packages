@@ -24,9 +24,22 @@ namespace packages
                     // by using its URI. Thus, we're reading the URI
                     // for each part in the package.
                     PackagePartCollection fParts = fPackage.GetParts();
-                    foreach (PackagePart fPart in fParts)
+                    foreach (PackagePart part in fParts)
                     {
-                        Console.WriteLine("Package part: {0}", fPart.Uri);
+                        Console.WriteLine("Package part: {0}", part.Uri);
+                        Console.WriteLine("  Content Type: {0}", part.ContentType.ToString());
+                        if (part.ContentType != "application/vnd.openxmlformats-package.relationships+xml")
+                        {
+                            PackageRelationshipCollection relationships = part.GetRelationships();
+                            foreach (PackageRelationship relationship in relationships)
+                            {
+                                Console.WriteLine("  Relationship Type: {0}", relationship.RelationshipType.ToString());
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("  PackageRelationship parts cannot have relationships to other parts.");
+                        }
                     }
                 }
             }
