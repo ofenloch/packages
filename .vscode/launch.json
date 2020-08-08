@@ -1,0 +1,57 @@
+{
+    // Use IntelliSense to find out which attributes exist for C# debugging
+    // Use hover for the description of the existing attributes
+    // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": ".NET Core Launch (integratedTerminal)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp2.2/packages.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "stopAtEntry": false
+        },
+        {
+            "name": ".NET Core Launch (console)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp2.2/packages.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
+        }
+    ]
+}
+// https://aka.ms/VSCode-CS-LaunchJson-Console says:
+//
+// Console (terminal) window
+// The "console" setting controls what console (terminal) window the target app is launched into. It can be set 
+// to any of these values:
+//
+// "internalConsole" (default) : the target process's console output (stdout/stderr) goes to the VS Code Debug Console. 
+//    This is useful for executables that take their input from the network, files, etc. But this does NOT work for 
+//    applications that want to read from the console (ex: Console.ReadLine).
+//
+// "integratedTerminal" : the target process will run inside VS Code's integrated terminal. Click the 'Terminal' tab 
+//    in the tab group beneath the editor to interact with your application. Alternatively add 
+//    "internalConsoleOptions": "neverOpen" to make it so that the default foreground tab is the terminal tab.
+//
+// "externalTerminal": the target process will run inside its own external terminal.
+//
