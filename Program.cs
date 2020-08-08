@@ -19,7 +19,7 @@ namespace packages
                 using (Package fPackage = Package.Open(
                     fileName, FileMode.Open, FileAccess.Read))
                 {
-                    IteratePackage(fPackage);
+                    IteratePackageParts(fPackage);
                 }
             }
             catch (Exception err)
@@ -34,7 +34,7 @@ namespace packages
             }
         } // static void Main(string[] args)
 
-        public static void IteratePackage(Package package)
+        public static void IteratePackageParts(Package package)
         {
             // The way to get a reference to a package part is
             // by using its URI. Thus, we're reading the URI
@@ -57,7 +57,7 @@ namespace packages
                     Console.WriteLine("  PackageRelationship parts cannot have relationships to other parts.");
                 }
             }
-        } // public static void IteratePackage(Package package)
+        } // public static void IteratePackageParts(Package package)
 
 
 
