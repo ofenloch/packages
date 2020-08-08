@@ -37,6 +37,17 @@ namespace packages
                         "http://schemas.microsoft.com/visio/2010/relationships/page");
                     // Open the XML from the Page Contents part.
                     XDocument pageXML = GetXMLFromPart(pagePart);
+                    // Get all of the shapes from the page by getting
+                    // all of the Shape elements from the pageXML document.
+                    IEnumerable<XElement> shapesXML = GetXElementsByName(pageXML, "Shape");
+                    if (shapesXML != null)
+                    {
+                        // Select a Shape element from the shapes on the page by 
+                        // its name. You can modify this code to select elements
+                        // by other attributes and their values.
+                        XElement startEndShapeXML =
+                            GetXElementByAttribute(shapesXML, "NameU", "Start/End");
+                    }
                     // save the XML document representing the first page as XML file
                     pageXML.Save("./data/page1.xml");
                 }
@@ -131,6 +142,30 @@ namespace packages
             return partXml;
         } // private static XDocument GetXMLFromPart(PackagePart packagePart)
 
+        private static IEnumerable<XElement> GetXElementsByName(XDocument packagePart, string elementType)
+        {
+            // Construct a LINQ query that selects elements by their element type.
+            IEnumerable<XElement> elements =
+                from element in packagePart.Descendants()
+                where element.Name.LocalName == elementType
+                select element;
+            // Return the selected elements to the calling code.
+            return elements.DefaultIfEmpty(null);
+        } // private static IEnumerable<XElement> GetXElementsByName(XDocument packagePart, string elementType)
+
+        private static XElement GetXElementByAttribute(IEnumerable<XElement> elements, string attributeName, string attributeValue)
+        {
+            // Construct a LINQ query that selects elements from a group
+            // of elements by the value of a specific attribute.
+            IEnumerable<XElement> selectedElements =
+                from el in elements
+                where el.Attribute(attributeName).Value == attributeValue
+                select el;
+            // If there aren't any elements of the specified type
+            // with the specified attribute value in the document,
+            // return null to the calling code.
+            return selectedElements.DefaultIfEmpty(null).FirstOrDefault();
+        } // private static XElement GetXElementByAttribute(IEnumerable<XElement> elements, string attributeName, string attributeValue)
 
         //  --------------------------- CopyStream ---------------------------
         /// <summary>
