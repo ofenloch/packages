@@ -8,10 +8,11 @@ namespace packages
     {
         static void Main(string[] args)
         {
-            string fileName = "./data/60489.vsdx";
+            //string fileName = "./data/60489.vsdx";
+            string fileName = "data/hello-world-unsigned.docx";
             try
             {
-                Console.WriteLine("Opening the VSDX file {0} ...", fileName);
+                Console.WriteLine("Opening the Package in file \"{0}\" ...", fileName);
                 // We're not going to do any more than open
                 // and read the list of parts in the package, although
                 // we can create a package or read/write what's inside.
