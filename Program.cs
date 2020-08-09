@@ -51,16 +51,23 @@ namespace packages
                     // save the XML document representing the first page as XML file
                     pageXML.Save("./data/page1.xml");
                 }
+
+                using (Package fPackage = Package.Open(fileName, FileMode.Open, FileAccess.Read))
+                {
+                    UnpackPackage(fPackage, "targetdir");
+                }
+
             }
             catch (Exception err)
             {
                 Console.WriteLine("Error: {0}", err.Message);
+                Console.WriteLine(err.StackTrace);
             }
             finally
             {
-                Console.Write("\nPress any key to continue ...");
-                Console.Write("\nBye!\n");
-                Console.ReadKey();
+                // Console.Write("\nPress any key to continue ...");
+                // Console.Write("\nBye!\n");
+                // Console.ReadKey();
             }
         } // static void Main(string[] args)
 
@@ -88,6 +95,29 @@ namespace packages
                 }
             }
         } // public static void IteratePackageParts(Package package)
+
+        // unpack the given Pakage and write its content as XML files to the given target directory
+        public static void UnpackPackage(Package package, string targetDir)
+        {
+            CreateDirectory(targetDir);
+            // The way to get a reference to a package part is
+            // by using its URI. Thus, we're reading the URI
+            // for each part in the package.
+            PackagePartCollection packageParts = package.GetParts();
+            foreach (PackagePart packagePart in packageParts)
+            {
+                Uri uri = packagePart.Uri;
+                Console.WriteLine("Package part: {0}", uri);
+                string fileName = targetDir + uri;
+                string dirName = Path.GetDirectoryName(fileName);
+                CreateDirectory(dirName);
+                Console.WriteLine("  file {0}", fileName);
+                // Open the XML from the Page Contents part.
+                XDocument packagePartXML = GetXMLFromPart(packagePart);
+                packagePartXML.Save(fileName);
+
+            }
+        } // public static void UnpackPackage(Package package, string targetDir)
 
         // get a specific PackagePart by its PackageRelationship (without having to iterate over all of the PackageParts)
         private static PackagePart GetPackagePart(Package filePackage, string relationship)
@@ -164,7 +194,15 @@ namespace packages
             // If there aren't any elements of the specified type
             // with the specified attribute value in the document,
             // return null to the calling code.
-            return selectedElements.DefaultIfEmpty(null).FirstOrDefault();
+            selectedElements.DefaultIfEmpty(null);
+            if (selectedElements == null)
+            {
+                return null;
+            }
+            else
+            {
+                return selectedElements.DefaultIfEmpty(null).FirstOrDefault();
+            }
         } // private static XElement GetXElementByAttribute(IEnumerable<XElement> elements, string attributeName, string attributeValue)
 
         //  --------------------------- CopyStream ---------------------------
@@ -182,6 +220,30 @@ namespace packages
             while ((bytesRead = source.Read(buf, 0, bufSize)) > 0)
                 target.Write(buf, 0, bytesRead);
         }// end:CopyStream()
+
+        // create the given directory / path
+        private static void CreateDirectory(string path)
+        {
+            try
+            {
+                // Determine whether the directory exists.
+                if (Directory.Exists(path))
+                {
+                    // TODO: use logger Console.WriteLine("That path \"{0}\" exists already.", path);
+                    return;
+                }
+
+                // Try to create the directory.
+                DirectoryInfo di = Directory.CreateDirectory(path);
+                // TODO: use logger Console.WriteLine("The directory \"{0}\" was created successfully at {1}.", di.FullName, Directory.GetCreationTime(path));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("CreateDirectory failed: {0}", e.ToString());
+            }
+            finally { }
+        } // private static void CreateDirectory(string path)
+
 
     } // class Program
 } // namespace packages
