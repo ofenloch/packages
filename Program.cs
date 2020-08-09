@@ -10,6 +10,7 @@ namespace packages
 {
     class Program
     {
+        static string outputDirectory = "./testoutput/";
         static void Main(string[] args)
         {
             string fileName = "./data/60489.vsdx";
@@ -57,12 +58,14 @@ namespace packages
                             }
                     }
                     // save the XML document representing the first page as XML file
-                    pageXML.Save("./data/page1.xml");
+                    CreateDirectory(outputDirectory);
+                    pageXML.Save(outputDirectory + "page1.xml");
                 }
 
                 using (Package fPackage = Package.Open(fileName, FileMode.Open, FileAccess.Read))
                 {
-                    UnpackPackage(fPackage, "targetdir");
+                    string targetDir = outputDirectory + Path.GetFileName(fileName) + ".unpacked";
+                    UnpackPackage(fPackage, targetDir);
                 }
 
             }
