@@ -1,8 +1,8 @@
 # System.IO.Packaging Namespace
 
-starting with a hello world console application in dotnet 2.2
+Start with a hello world console application in dotnet 2.2 on Kubuntu 14.04 LTS by running `dotnet new console --name packages`.
 
-add package **System.IO.Packaging** by running `dotnet add package System.IO.Packaging`
+Add package **System.IO.Packaging** by running `dotnet add package System.IO.Packaging`.
 
 ```bash
 ofenloch@kubuntu1404ofenloch:~/workspaces/dotnet/packages$ dotnet add package System.IO.Packaging
@@ -22,3 +22,12 @@ log  : Restore completed in 1.3 sec for /home/ofenloch/workspaces/dotnet/package
 ofenloch@kubuntu1404ofenloch:~/workspaces/dotnet/packages$
 ```
 
+The goal is to manipulate Visio files. But the package stuff is common to all Office XML formats.
+
+Informational stuff:
+
+ * [Manipulate the Visio file format programmatically](https://docs.microsoft.com/en-us/office/client-developer/visio/how-to-manipulate-the-visio-file-format-programmatically)
+
+ * [Introduction to the Visio file format (.vsdx)](https://docs.microsoft.com/en-us/office/client-developer/visio/introduction-to-the-visio-file-formatvsdx)
+
+ * [VSDX: the new Visio file format](https://www.microsoft.com/en-us/microsoft-365/blog/2012/09/10/vsdx-the-new-visio-file-format/)
