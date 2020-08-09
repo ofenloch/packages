@@ -47,6 +47,14 @@ namespace packages
                         // by other attributes and their values.
                         XElement startEndShapeXML =
                             GetXElementByAttribute(shapesXML, "NameU", "Start/End");
+                            if (startEndShapeXML != null)
+                            {
+                                Console.WriteLine("Found shape named \"Start/End\"");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Couldn't find shape named \"Start/End\"");
+                            }
                     }
                     // save the XML document representing the first page as XML file
                     pageXML.Save("./data/page1.xml");
@@ -194,14 +202,15 @@ namespace packages
             // If there aren't any elements of the specified type
             // with the specified attribute value in the document,
             // return null to the calling code.
-            selectedElements.DefaultIfEmpty(null);
-            if (selectedElements == null)
+            try
             {
-                return null;
-            }
-            else
-            {
+                // this throws an exception if the query doesn't return any resulte
                 return selectedElements.DefaultIfEmpty(null).FirstOrDefault();
+            }
+            catch (Exception e)
+            {
+                // so we return simply null
+                return null;
             }
         } // private static XElement GetXElementByAttribute(IEnumerable<XElement> elements, string attributeName, string attributeValue)
 
