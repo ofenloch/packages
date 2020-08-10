@@ -2,3 +2,5 @@
 .gitconfig
 bin/
 obj/Debug/
+# We don't want the output of testruns in our repo:
+testoutput/
