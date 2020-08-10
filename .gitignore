@@ -1,2 +1,4 @@
+# Never ever commit .gitconfig! Don't even think about it!"
+.gitconfig
 bin/
 obj/Debug/
