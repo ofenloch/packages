@@ -13,8 +13,9 @@ namespace packages
         static string outputDirectory = "./testoutput/";
         static void Main(string[] args)
         {
-            string fileName = "./data/60489.vsdx";
+            //string fileName = "./data/60489.vsdx";
             //string fileName = "data/hello-world-unsigned.docx";
+            string fileName = "./data/Visio Package.vsdx";
             try
             {
                 Console.WriteLine("Opening the Package in file \"{0}\" ...", fileName);
@@ -48,14 +49,14 @@ namespace packages
                         // by other attributes and their values.
                         XElement startEndShapeXML =
                             GetXElementByAttribute(shapesXML, "NameU", "Start/End");
-                            if (startEndShapeXML != null)
-                            {
-                                Console.WriteLine("Found shape named \"Start/End\"");
-                            }
-                            else
-                            {
-                                Console.WriteLine("Couldn't find shape named \"Start/End\"");
-                            }
+                        if (startEndShapeXML != null)
+                        {
+                            Console.WriteLine("Found shape named \"Start/End\"");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Couldn't find shape named \"Start/End\"");
+                        }
                     }
                     // save the XML document representing the first page as XML file
                     CreateDirectory(outputDirectory);
@@ -123,10 +124,15 @@ namespace packages
                 string dirName = Path.GetDirectoryName(fileName);
                 CreateDirectory(dirName);
                 Console.WriteLine("  file {0}", fileName);
-                // Open the XML from the Page Contents part.
-                XDocument packagePartXML = GetXMLFromPart(packagePart);
-                packagePartXML.Save(fileName);
-
+                if (packagePart.ContentType.EndsWith("xml")) {
+                    // Open the XML from the Page Contents part.
+                    XDocument packagePartXML = GetXMLFromPart(packagePart);
+                    packagePartXML.Save(fileName);
+                } else {
+                    // just save the non XML as it is
+                    FileStream newFileStrem = new FileStream(fileName, FileMode.Create);
+                    packagePart.GetStream().CopyTo(newFileStrem);
+                }
             }
         } // public static void UnpackPackage(Package package, string targetDir)
 
