@@ -1,15 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Packaging;
 using System.Linq;
+using System.Text;
+using System.IO;
+using System.IO.Packaging; // dotnet add package System.IO.Packaging
+using System.Diagnostics;
 using System.Xml;
 using System.Xml.Linq;
-
 namespace packages
 {
+
     class Program
     {
+        /**
+         * Core document relationship type.
+         */
+        private const string CORE_DOCUMENT = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument";
+        /**
+         * Visio 2010 VSDX equivalent of package {@link #CORE_DOCUMENT}
+         */
+        private const string VISIO_CORE_DOCUMENT = "http://schemas.microsoft.com/visio/2010/relationships/document";
+        private const string VISIO_PAGES = "http://schemas.microsoft.com/visio/2010/relationships/pages";
+        private const string VISIO_PAGE = "http://schemas.microsoft.com/visio/2010/relationships/page";
+
         static string outputDirectory = "./testoutput/";
         static void Main(string[] args)
         {
@@ -29,45 +42,87 @@ namespace packages
                     //IteratePackageParts(fPackage);
 
                     // Get a reference to the Visio Document part contained in the file package.
-                    PackagePart documentPart = GetPackagePart(fPackage,
-                        "http://schemas.microsoft.com/visio/2010/relationships/document");
-                    // Get a reference to the collection of pages in the document, 
-                    // and then to the first page in the document.
-                    PackagePart pagesPart = GetPackagePart(fPackage, documentPart,
-                        "http://schemas.microsoft.com/visio/2010/relationships/pages");
-                    PackagePart pagePart = GetPackagePart(fPackage, pagesPart,
-                        "http://schemas.microsoft.com/visio/2010/relationships/page");
-                    // Open the XML from the Page Contents part.
-                    XDocument pageXML = GetXMLFromPart(pagePart);
-                    // Get all of the shapes from the page by getting
-                    // all of the Shape elements from the pageXML document.
-                    IEnumerable<XElement> shapesXML = GetXElementsByName(pageXML, "Shape");
-                    if (shapesXML != null)
+                    PackagePart documentPart = GetPackagePart(fPackage, VISIO_CORE_DOCUMENT);
+                    if (documentPart != null)
                     {
-                        // Select a Shape element from the shapes on the page by 
-                        // its name. You can modify this code to select elements
-                        // by other attributes and their values.
-                        XElement startEndShapeXML =
-                            GetXElementByAttribute(shapesXML, "NameU", "Start/End");
-                        if (startEndShapeXML != null)
+                        // Get a reference to the collection of pages in the document, 
+                        // and then to the first page in the document.
+                        PackagePart pagesPart = GetPackagePart(fPackage, documentPart, VISIO_PAGES);
+                        if (pagesPart != null)
                         {
-                            Console.WriteLine("Found shape named \"Start/End\"");
-                        }
+                            PackagePart page1Part = GetPackagePart(fPackage, pagesPart, VISIO_PAGE);
+                            if (page1Part != null)
+                            {
+                                // Open the XML from the Page Contents part.
+                                XDocument page1XML = GetXMLFromPart(page1Part);
+                                page1XML.Save(outputDirectory + "page1_orig.xml");
+                                // Get all of the shapes from the page by getting
+                                // all of the Shape elements from the pageXML document.
+                                IEnumerable<XElement> shapesXML = GetXElementsByName(page1XML, "Shape");
+                                if (shapesXML != null)
+                                {
+                                    // Select a Shape element from the shapes on the page by 
+                                    // its name. You can modify this code to select elements
+                                    // by other attributes and their values.
+                                    XElement startEndShapeXML =
+                                        GetXElementByAttribute(shapesXML, "NameU", "Start/End");
+                                    if (startEndShapeXML != null)
+                                    {
+                                        Console.WriteLine("Found shape named \"Start/End\"");
+                                        // Query the XML for the shape to get the Text element, and
+                                        // return the first Text element node.
+                                        IEnumerable<XElement> textElements = from element in startEndShapeXML.Elements()
+                                                                             where element.Name.LocalName == "Text"
+                                                                             select element;
+                                        XElement textElement = textElements.ElementAt(0);
+                                        // Change the shape text, leaving the <cp> element alone.
+                                        textElement.LastNode.ReplaceWith("Start process\n");
+                                        /* CAUTION
+                                            In the previous code example, the existing shape text and the string used to replace it have the same 
+                                            number of characters. Also note that the LINQ query changes the value of the last child node of the returned 
+                                            element (which, in this case, is a text node). This is done to avoid changing the settings of the cp element 
+                                            that is a child of the Text element. It is possible to cause file instability if you alter shape text 
+                                            programmatically by overwriting all children of the Text element. As in the example above, the text 
+                                            formatting is represented by cp elements under the Text element in the file. The definition of the formatting 
+                                            is stored in the parent Section element. If these two pieces of information become inconsistent, then the file 
+                                            may not behave as expected. Visio heals many inconsistencies, but it is better to ensure that any programmatic 
+                                            changes are consistent so that you are controlling the ultimate behavior of the file.
+                                        */
+                                        // Save the XML back to the Page Contents part.
+                                        SaveXDocumentToPart(page1Part, page1XML);
+                                        fPackage.Close();
+                                        Console.WriteLine("Closed modified package.");
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("Couldn't find shape named \"Start/End\"");
+                                    }
+                                }
+                                // save the XML document representing the first page as XML file
+                                CreateDirectory(outputDirectory);
+                                page1XML.Save(outputDirectory + "page1_possibly_modified.xml");
+                            } // if (page1Part != null )
+                            else
+                            {
+                                Console.WriteLine("Couldn't find Visio page1Part.");
+                            }
+                        } // if (pagesPart != null)
                         else
                         {
-                            Console.WriteLine("Couldn't find shape named \"Start/End\"");
+                            Console.WriteLine("Couldn't find Visio pagesPart.");
                         }
+                    } // if (documentPart != null)
+                    else
+                    {
+                        Console.WriteLine("Couldn't find Visio documentPart.");
                     }
-                    // save the XML document representing the first page as XML file
-                    CreateDirectory(outputDirectory);
-                    pageXML.Save(outputDirectory + "page1.xml");
                 }
 
-                using (Package fPackage = Package.Open(fileName, FileMode.Open, FileAccess.Read))
-                {
-                    string targetDir = outputDirectory + Path.GetFileName(fileName) + ".unpacked";
-                    UnpackPackage(fPackage, targetDir);
-                }
+                // using (Package fPackage = Package.Open(fileName, FileMode.Open, FileAccess.Read))
+                // {
+                //     string targetDir = outputDirectory + Path.GetFileName(fileName) + ".unpacked";
+                //     UnpackPackage(fPackage, targetDir);
+                // }
 
             }
             catch (Exception err)
@@ -124,11 +179,14 @@ namespace packages
                 string dirName = Path.GetDirectoryName(fileName);
                 CreateDirectory(dirName);
                 Console.WriteLine("  file {0}", fileName);
-                if (packagePart.ContentType.EndsWith("xml")) {
+                if (packagePart.ContentType.EndsWith("xml"))
+                {
                     // Open the XML from the Page Contents part.
                     XDocument packagePartXML = GetXMLFromPart(packagePart);
                     packagePartXML.Save(fileName);
-                } else {
+                }
+                else
+                {
                     // just save the non XML as it is
                     FileStream newFileStrem = new FileStream(fileName, FileMode.Create);
                     packagePart.GetStream().CopyTo(newFileStrem);
@@ -262,6 +320,44 @@ namespace packages
             finally { }
         } // private static void CreateDirectory(string path)
 
+        // save the (changed) XML back to the package
+        private static void SaveXDocumentToPart(PackagePart packagePart, XDocument partXML)
+        {
+            MemoryStream ms = new MemoryStream();
+            partXML.Save(ms);
+            ms.Position = 0;
+            CopyStream(ms, packagePart.GetStream());
+            return;
+            // /*
+            //     This throws an exception
+
+            //             System.IO.IOException: Entries cannot be opened multiple times in Update mode.
+            //             at System.IO.Compression.ZipArchiveEntry.OpenInUpdateMode()
+            //             at System.IO.Compression.ZipArchiveEntry.Open()
+            //             at System.IO.Packaging.ZipStreamManager.Open(ZipArchiveEntry zipArchiveEntry, FileMode streamFileMode, FileAccess streamFileAccess)
+            //             at System.IO.Packaging.ZipPackagePart.GetStreamCore(FileMode streamFileMode, FileAccess streamFileAccess)
+            //             at System.IO.Packaging.PackagePart.GetStream(FileMode mode, FileAccess access)
+            //             at System.IO.Packaging.PackagePart.GetStream()
+            //             at viflow.Program.SaveXDocumentToPart(PackagePart packagePart, XDocument partXML) in C:\Users\Ofenloch.ol\c#\viflow\Program.cs:line 242
+            //             at viflow.Program.Main(String[] args) in C:\Users\Ofenloch.ol\c#\viflow\Program.cs:line 94
+
+            //     when creating the XmlWriter.
+
+            //     This makes sense, but MS docs don't tell us how to write the manipulated XML back to the package :-(
+            // */
+
+            // // Create a new XmlWriterSettings object to 
+            // // define the characteristics for the XmlWriter
+            // XmlWriterSettings partWriterSettings = new XmlWriterSettings();
+            // partWriterSettings.Encoding = Encoding.UTF8;
+            // // Create a new XmlWriter and then write the XML
+            // // back to the document part.
+            // XmlWriter partWriter = XmlWriter.Create(packagePart.GetStream(), partWriterSettings);
+            // partXML.WriteTo(partWriter);
+            // // Flush and close the XmlWriter.
+            // partWriter.Flush();
+            // partWriter.Close();
+        } // private static void SaveXDocumentToPart(PackagePart packagePart, XDocument partXML)
 
     } // class Program
 } // namespace packages
