@@ -3,7 +3,9 @@
 # About .git-credentials think even lesser!!!!
 .git-credentials
 
+# ignore files created by build process (dotnet restore / build / run)
 bin/
 obj/
+
 # We don't want the output of testruns in our repo:
 testoutput/
