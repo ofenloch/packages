@@ -27,20 +27,19 @@ namespace packages
         static void Main(string[] args)
         {
             //string fileNameOrig = "./data/60489.vsdx";
-            //string fileNameOrig = "data/hello-world-unsigned.docx";
-            string fileNameOrig = "./data/Visio Package.vsdx";
+            string fileNameOrig = "data/hello-world-unsigned.docx";
+            //string fileNameOrig = "./data/Visio Package.vsdx";
             string fileNameCopy = outputDirectory + Path.GetFileName(fileNameOrig);
             try
             {
                 CreateDirectory(outputDirectory);
                 File.Copy(fileNameOrig, fileNameCopy, true);
                 Console.WriteLine("Opening the Package in file \"{0}\" ...", fileNameCopy);
-                
+
                 // We're not going to do any more than open
                 // and read the list of parts in the package, although
                 // we can create a package or read/write what's inside.
-                using (Package fPackage = Package.Open(
-                    fileNameCopy, FileMode.Open, FileAccess.Read))
+                using (Package fPackage = Package.Open(fileNameCopy, FileMode.Open, FileAccess.Read))
                 {
                     // we need this only to get info or for debugging / testing
                     //IteratePackageParts(fPackage);
@@ -118,9 +117,18 @@ namespace packages
                     } // if (documentPart != null)
                     else
                     {
-                        Console.WriteLine("Couldn't find Visio documentPart.");
+                        Console.WriteLine("Couldn't find Visio documentPart. Trying to get Office document ...");
+                        documentPart = GetPackagePart(fPackage, CORE_DOCUMENT);
+                        if (documentPart != null)
+                        {
+                            Console.WriteLine("Found Office documentPart with URI \"{0}\"", documentPart.Uri);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Couldn't find Office documentPart.");
+                        }
                     }
-                }
+                } // using (Package fPackage = Package.Open(fileNameCopy, FileMode.Open, FileAccess.Read))
 
                 // using (Package fPackage = Package.Open(fileNameCopy, FileMode.Open, FileAccess.Read))
                 // {
