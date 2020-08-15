@@ -1,5 +1,8 @@
-# Never ever commit .gitconfig! Don't even think about it!"
+# Never ever commit .gitconfig! Don't even think about it!
 .gitconfig
+# About .git-credentials think even lesser!!!!
+.git-credentials
+
 bin/
 obj/
 # We don't want the output of testruns in our repo:
