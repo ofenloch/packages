@@ -1,6 +1,6 @@
 # Never ever commit .gitconfig! Don't even think about it!"
 .gitconfig
 bin/
-obj/Debug/
+obj/
 # We don't want the output of testruns in our repo:
 testoutput/
