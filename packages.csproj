@@ -2,6 +2,11 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <!-- 
+      On older systems (like my Kubuntu 14.04 LTS) there may be only older versions avalailable.
+      If you change something here, you need to adjust .vscode/launch.json too.
+      <TargetFramework>netcoreapp2.2</TargetFramework>
+    -->
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
