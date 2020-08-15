@@ -7,6 +7,7 @@ using System.IO.Packaging; // dotnet add package System.IO.Packaging
 using System.Diagnostics;
 using System.Xml;
 using System.Xml.Linq;
+
 namespace packages
 {
 
@@ -27,8 +28,8 @@ namespace packages
         static void Main(string[] args)
         {
             //string fileNameOrig = "./data/60489.vsdx";
-            string fileNameOrig = "data/hello-world-unsigned.docx";
-            //string fileNameOrig = "./data/Visio Package.vsdx";
+            //string fileNameOrig = "data/hello-world-unsigned.docx";
+            string fileNameOrig = "./data/Visio Package.vsdx";
             string fileNameCopy = outputDirectory + Path.GetFileName(fileNameOrig);
             try
             {
@@ -39,7 +40,7 @@ namespace packages
                 // We're not going to do any more than open
                 // and read the list of parts in the package, although
                 // we can create a package or read/write what's inside.
-                using (Package fPackage = Package.Open(fileNameCopy, FileMode.Open, FileAccess.Read))
+                using (Package fPackage = Package.Open(fileNameCopy, FileMode.Open, FileAccess.ReadWrite))
                 {
                     // we need this only to get info or for debugging / testing
                     //IteratePackageParts(fPackage);
@@ -94,7 +95,7 @@ namespace packages
                                         // Save the XML back to the Page Contents part.
                                         SaveXDocumentToPart(page1Part, page1XML);
                                         fPackage.Close();
-                                        Console.WriteLine("Closed modified package.");
+                                        Console.WriteLine("Closed modified package in file \"{0}\"", fileNameCopy);
                                     }
                                     else
                                     {
@@ -256,6 +257,8 @@ namespace packages
             // open the stream in an XDocument object.
             Stream partStream = packagePart.GetStream();
             partXml = XDocument.Load(partStream);
+            // close the part's stream so we won't get an exception when writing to it
+            partStream.Close();
             return partXml;
         } // private static XDocument GetXMLFromPart(PackagePart packagePart)
 
@@ -332,44 +335,39 @@ namespace packages
             finally { }
         } // private static void CreateDirectory(string path)
 
-        // save the (changed) XML back to the package
-        private static void SaveXDocumentToPart(PackagePart packagePart, XDocument partXML)
+        // save the changed XML back to the package
+
+        public static void SaveXDocumentToPart(PackagePart packagePart, XDocument partXML)
+
         {
-            MemoryStream ms = new MemoryStream();
-            partXML.Save(ms);
-            ms.Position = 0;
-            CopyStream(ms, packagePart.GetStream());
-            return;
-            // /*
-            //     This throws an exception
-
-            //             System.IO.IOException: Entries cannot be opened multiple times in Update mode.
-            //             at System.IO.Compression.ZipArchiveEntry.OpenInUpdateMode()
-            //             at System.IO.Compression.ZipArchiveEntry.Open()
-            //             at System.IO.Packaging.ZipStreamManager.Open(ZipArchiveEntry zipArchiveEntry, FileMode streamFileMode, FileAccess streamFileAccess)
-            //             at System.IO.Packaging.ZipPackagePart.GetStreamCore(FileMode streamFileMode, FileAccess streamFileAccess)
-            //             at System.IO.Packaging.PackagePart.GetStream(FileMode mode, FileAccess access)
-            //             at System.IO.Packaging.PackagePart.GetStream()
-            //             at viflow.Program.SaveXDocumentToPart(PackagePart packagePart, XDocument partXML) in C:\Users\Ofenloch.ol\c#\viflow\Program.cs:line 242
-            //             at viflow.Program.Main(String[] args) in C:\Users\Ofenloch.ol\c#\viflow\Program.cs:line 94
-
-            //     when creating the XmlWriter.
-
-            //     This makes sense, but MS docs don't tell us how to write the manipulated XML back to the package :-(
-            // */
-
-            // // Create a new XmlWriterSettings object to 
-            // // define the characteristics for the XmlWriter
-            // XmlWriterSettings partWriterSettings = new XmlWriterSettings();
-            // partWriterSettings.Encoding = Encoding.UTF8;
-            // // Create a new XmlWriter and then write the XML
-            // // back to the document part.
-            // XmlWriter partWriter = XmlWriter.Create(packagePart.GetStream(), partWriterSettings);
-            // partXML.WriteTo(partWriter);
-            // // Flush and close the XmlWriter.
-            // partWriter.Flush();
-            // partWriter.Close();
-        } // private static void SaveXDocumentToPart(PackagePart packagePart, XDocument partXML)
+            /**
+                The following code uses the XmlWriter class and XmlWriterSettings class to write the XML back to 
+                the package part. Although you can use the Save() method to save the XML back to the part, the 
+                XmlWriter and XmlWriterSettings classes allow you finer control over the output, including specifying 
+                the type of encoding. The XDocument class exposes a WriteTo(XmlWriter) method that takes an XmlWriter 
+                object and writes XML back to a stream.
+            **/
+            // Create a new XmlWriterSettings object to 
+            // define the characteristics for the XmlWriter
+            XmlWriterSettings partWriterSettings = new XmlWriterSettings();
+            partWriterSettings.Encoding = Encoding.UTF8;
+            // Create a new XmlWriter and then write the XML back to the document part.
+            XmlWriter partWriter = XmlWriter.Create(packagePart.GetStream(), partWriterSettings);
+            // The GetStream() above throws an exception if the package part's stream is still open:
+            // System.IO.IOException: Entries cannot be opened multiple times in Update mode.
+            //   at System.IO.Compression.ZipArchiveEntry.OpenInUpdateMode()
+            //   at System.IO.Compression.ZipArchiveEntry.Open()
+            //   at System.IO.Packaging.ZipStreamManager.Open(ZipArchiveEntry zipArchiveEntry, FileMode streamFileMode, FileAccess streamFileAccess)
+            //   at System.IO.Packaging.ZipPackagePart.GetStreamCore(FileMode streamFileMode, FileAccess streamFileAccess)
+            //   at System.IO.Packaging.PackagePart.GetStream(FileMode mode, FileAccess access)
+            //   at System.IO.Packaging.PackagePart.GetStream()
+            //   at VisioEditor.Program.SaveXDocumentToPart(PackagePart packagePart, XDocument partXML) in C: \Users\Ofenloch.ol\VisualStudio\VisioEditor\VisioEditor\Program.cs:line 216
+            //   at VisioEditor.Program.Main(String[] args) in C: \Users\Ofenloch.ol\VisualStudio\VisioEditor\VisioEditor\Program.cs:line 60
+            partXML.WriteTo(partWriter);
+            // Flush and close the XmlWriter.
+            partWriter.Flush();
+            partWriter.Close();
+        } // public static void SaveXDocumentToPart(PackagePart packagePart, XDocument partXML)
 
     } // class Program
 } // namespace packages
