@@ -92,6 +92,24 @@ namespace packages
                                             may not behave as expected. Visio heals many inconsistencies, but it is better to ensure that any programmatic 
                                             changes are consistent so that you are controlling the ultimate behavior of the file.
                                         */
+
+                                        // Insert a new Cell element in the Start/End shape that adds an arbitrary
+                                        // local ThemeIndex value. This code assumes that the shape does not 
+                                        // already have a local ThemeIndex cell.
+                                        startEndShapeXML.Add(new XElement("Cell",
+                                            new XAttribute("N", "ThemeIndex"),
+                                            new XAttribute("V", "25"),
+                                            new XProcessingInstruction("NewValue", "V")));
+                                        // Change the shape's horizontal position on the page 
+                                        // by getting a reference to the Cell element for the PinY 
+                                        // ShapeSheet cell and changing the value of its V attribute.
+                                        XElement pinYCellXML = GetXElementByAttribute(
+                                            startEndShapeXML.Elements(), "N", "PinY");
+                                        pinYCellXML.SetAttributeValue("V", "2");
+                                        // Add instructions to Visio to recalculate the entire document
+                                        // when it is next opened.
+                                        RecalcDocument(fPackage);
+
                                         // Save the XML back to the Page Contents part.
                                         SaveXDocumentToPart(page1Part, page1XML);
                                         fPackage.Close();
@@ -368,6 +386,97 @@ namespace packages
             partWriter.Flush();
             partWriter.Close();
         } // public static void SaveXDocumentToPart(PackagePart packagePart, XDocument partXML)
+
+        // make Visio recalculate the entire document when it is opened
+        // by setting the RecalcDocument property (if it is not already set)
+        private static void RecalcDocument(Package filePackage)
+        {
+            // Get the Custom File Properties part from the package and
+            // and then extract the XML from it.
+            PackagePart customPart = GetPackagePart(filePackage,
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties");
+            XDocument customPartXML = GetXMLFromPart(customPart);
+            // Check to see whether document recalculation has already been 
+            // set for this document. If it hasn't, use the integer
+            // value returned by CheckForRecalc as the property ID.
+            int propertyID = CheckForRecalc(customPartXML);
+            if (propertyID > -1)
+            {
+                XElement customPartRoot = customPartXML.Elements().ElementAt(0);
+                // Two XML namespaces are needed to add XML data to this 
+                // document. Here, we're using the GetNamespaceOfPrefix and 
+                // GetDefaultNamespace methods to get the namespaces that 
+                // we need. You can specify the exact strings for the 
+                // namespaces, but that is not recommended.
+                XNamespace customVTypesNS = customPartRoot.GetNamespaceOfPrefix("vt");
+                XNamespace customPropsSchemaNS = customPartRoot.GetDefaultNamespace();
+                // Construct the XML for the new property in the XDocument.Add method.
+                // This ensures that the XNamespace objects will resolve properly, 
+                // apply the correct prefix, and will not default to an empty namespace.
+                customPartRoot.Add(
+                    new XElement(customPropsSchemaNS + "property",
+                        new XAttribute("pid", propertyID.ToString()),
+                        new XAttribute("name", "RecalcDocument"),
+                        new XAttribute("fmtid",
+                            "{D5CDD505-2E9C-101B-9397-08002B2CF9AE}"),
+                        new XElement(customVTypesNS + "bool", "true")
+                    ));
+            }
+            // Save the Custom Properties package part back to the package.
+            SaveXDocumentToPart(customPart, customPartXML);
+        } // private static void RecalcDocument(Package filePackage)
+
+
+
+        // check if the property RecalcDocument is already set
+        // return its id if so or -1 if it is not set
+        private static int CheckForRecalc(XDocument customPropsXDoc)
+        {
+            // Set the inital propertyID to -1, which is not an allowed value.
+            // The calling code tests to see whether the pidValue is 
+            // greater than -1.
+            int propertyID = -1;
+            // Get all of the property elements from the document. 
+            IEnumerable<XElement> props = GetXElementsByName(
+                customPropsXDoc, "property");
+            // Get the RecalcDocument property from the document if it exists already.
+            XElement recalcProp = GetXElementByAttribute(props,
+                "name", "RecalcDocument");
+            // If there is already a RecalcDocument instruction in the 
+            // Custom File Properties part, then we don't need to add another one. 
+            // Otherwise, we need to create a unique pid value.
+            if (recalcProp != null)
+            {
+                return propertyID;
+            }
+            else
+            {
+                // Get all of the pid values of the property elements and then
+                // convert the IEnumerable object into an array.
+                IEnumerable<string> propIDs =
+                    from prop in props
+                    where prop.Name.LocalName == "property"
+                    select prop.Attribute("pid").Value;
+                string[] propIDArray = propIDs.ToArray();
+                // Increment this id value until a unique value is found.
+                // This starts at 2, because 0 and 1 are not valid pid values.
+                int id = 2;
+                while (propertyID == -1)
+                {
+                    if (propIDArray.Contains(id.ToString()))
+                    {
+                        id++;
+                    }
+                    else
+                    {
+                        propertyID = id;
+                    }
+                }
+            }
+            return propertyID;
+        } // private static int CheckForRecalc(XDocument customPropsXDoc)
+
+
 
     } // class Program
 } // namespace packages
