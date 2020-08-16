@@ -18,6 +18,10 @@ namespace packages
          */
         private const string CORE_DOCUMENT = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument";
         /**
+         * Custom properties relationship type.
+         */
+        private const string CUSTOM_PROPERTIES = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties";
+        /**
          * Visio 2010 VSDX equivalent of package {@link #CORE_DOCUMENT}
          */
         private const string VISIO_CORE_DOCUMENT = "http://schemas.microsoft.com/visio/2010/relationships/document";
@@ -393,8 +397,7 @@ namespace packages
         {
             // Get the Custom File Properties part from the package and
             // and then extract the XML from it.
-            PackagePart customPart = GetPackagePart(filePackage,
-                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties");
+            PackagePart customPart = GetPackagePart(filePackage, CUSTOM_PROPERTIES);
             XDocument customPartXML = GetXMLFromPart(customPart);
             // Check to see whether document recalculation has already been 
             // set for this document. If it hasn't, use the integer
