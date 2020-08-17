@@ -8,26 +8,13 @@ using System.Diagnostics;
 using System.Xml;
 using System.Xml.Linq;
 
+using packages;
+
 namespace packages
 {
 
     class Program
     {
-        /**
-         * Core document relationship type.
-         */
-        private const string CORE_DOCUMENT = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument";
-        /**
-         * Custom properties relationship type.
-         */
-        private const string CUSTOM_PROPERTIES = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties";
-        /**
-         * Visio 2010 VSDX equivalent of package {@link #CORE_DOCUMENT}
-         */
-        private const string VISIO_CORE_DOCUMENT = "http://schemas.microsoft.com/visio/2010/relationships/document";
-        private const string VISIO_PAGES = "http://schemas.microsoft.com/visio/2010/relationships/pages";
-        private const string VISIO_PAGE = "http://schemas.microsoft.com/visio/2010/relationships/page";
-
         static string outputDirectory = "./testoutput/";
         static void Main(string[] args)
         {
@@ -50,15 +37,15 @@ namespace packages
                     //IteratePackageParts(fPackage);
 
                     // Get a reference to the Visio Document part contained in the file package.
-                    PackagePart documentPart = GetPackagePart(fPackage, VISIO_CORE_DOCUMENT);
+                    PackagePart documentPart = GetPackagePart(fPackage, OOXMLPackage.VISIO_CORE_DOCUMENT);
                     if (documentPart != null)
                     {
                         // Get a reference to the collection of pages in the document, 
                         // and then to the first page in the document.
-                        PackagePart pagesPart = GetPackagePart(fPackage, documentPart, VISIO_PAGES);
+                        PackagePart pagesPart = GetPackagePart(fPackage, documentPart, OOXMLPackage.VISIO_PAGES);
                         if (pagesPart != null)
                         {
-                            PackagePart page1Part = GetPackagePart(fPackage, pagesPart, VISIO_PAGE);
+                            PackagePart page1Part = GetPackagePart(fPackage, pagesPart, OOXMLPackage.VISIO_PAGE);
                             if (page1Part != null)
                             {
                                 // Open the XML from the Page Contents part.
@@ -141,7 +128,7 @@ namespace packages
                     else
                     {
                         Console.WriteLine("Couldn't find Visio documentPart. Trying to get Office document ...");
-                        documentPart = GetPackagePart(fPackage, CORE_DOCUMENT);
+                        documentPart = GetPackagePart(fPackage, OOXMLPackage.CORE_DOCUMENT);
                         if (documentPart != null)
                         {
                             Console.WriteLine("Found Office documentPart with URI \"{0}\"", documentPart.Uri);
