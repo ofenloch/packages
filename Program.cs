@@ -35,19 +35,22 @@ namespace packages
                 using (Package fPackage = Package.Open(fileNameCopy, FileMode.Open, FileAccess.ReadWrite))
                 {
                     // we need this only to get info or for debugging / testing
-                    //IteratePackageParts(fPackage);
+                    OOXMLPackage.IteratePackageParts(fPackage);
                     OOXMLPackage.UnpackPackage(fPackage, fileNameCopy+".unpacked");
 
+                    // try to get page1.xml by its path / relative URI
+                    Uri pag1Uri = PackUriHelper.CreatePartUri(new Uri("/visio/pages/page1.xml", UriKind.Relative));
+                    PackagePart pagePart = fPackage.GetPart(pag1Uri);
                     // Get a reference to the Visio Document part contained in the file package.
-                    PackagePart documentPart = OOXMLPackage.GetPackagePart(fPackage, OOXMLPackage.VISIO_CORE_DOCUMENT);
+                    PackagePart documentPart = OOXMLPackage.GetPackagePartByRelationship(fPackage, OOXMLPackage.VISIO_CORE_DOCUMENT);
                     if (documentPart != null)
                     {
                         // Get a reference to the collection of pages in the document, 
                         // and then to the first page in the document.
-                        PackagePart pagesPart = OOXMLPackage.GetPackagePart(fPackage, documentPart, OOXMLPackage.VISIO_PAGES);
+                        PackagePart pagesPart = OOXMLPackage.GetPackagePartByRelationship(fPackage, documentPart, OOXMLPackage.VISIO_PAGES);
                         if (pagesPart != null)
                         {
-                            PackagePart page1Part = OOXMLPackage.GetPackagePart(fPackage, pagesPart, OOXMLPackage.VISIO_PAGE);
+                            PackagePart page1Part = OOXMLPackage.GetPackagePartByRelationship(fPackage, pagesPart, OOXMLPackage.VISIO_PAGE);
                             if (page1Part != null)
                             {
                                 // Open the XML from the Page Contents part.
@@ -130,7 +133,7 @@ namespace packages
                     else
                     {
                         Console.WriteLine("Couldn't find Visio documentPart. Trying to get Office document ...");
-                        documentPart = OOXMLPackage.GetPackagePart(fPackage, OOXMLPackage.CORE_DOCUMENT);
+                        documentPart = OOXMLPackage.GetPackagePartByRelationship(fPackage, OOXMLPackage.CORE_DOCUMENT);
                         if (documentPart != null)
                         {
                             Console.WriteLine("Found Office documentPart with URI \"{0}\"", documentPart.Uri);

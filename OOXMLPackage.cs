@@ -144,7 +144,7 @@ namespace packages
         } // public static void CreateDirectory(string path)
 
         // get a specific PackagePart by its PackageRelationship (without having to iterate over all of the PackageParts)
-        public static PackagePart GetPackagePart(Package filePackage, string relationship)
+        public static PackagePart GetPackagePartByRelationship(Package filePackage, string relationship)
         {
 
             // Use the namespace that describes the relationship 
@@ -162,10 +162,10 @@ namespace packages
                 part = filePackage.GetPart(docUri);
             }
             return part;
-        } // public static PackagePart GetPackagePart(Package filePackage, string relationship)
+        } // public static PackagePart GetPackagePartByRelationship(Package filePackage, string relationship)
 
         // get a specific PackagePart by its PackageRelationship to another PackagePart
-        public static PackagePart GetPackagePart(Package filePackage, PackagePart sourcePart, string relationship)
+        public static PackagePart GetPackagePartByRelationship(Package filePackage, PackagePart sourcePart, string relationship)
         {
             // This gets only the first PackagePart that shares the relationship
             // with the PackagePart passed in as an argument. You can modify the code
@@ -183,7 +183,7 @@ namespace packages
                 relatedPart = filePackage.GetPart(partUri);
             }
             return relatedPart;
-        } // public static PackagePart GetPackagePart(Package filePackage, PackagePart sourcePart, string relationship)
+        } // public static PackagePart GetPackagePartByRelationship(Package filePackage, PackagePart sourcePart, string relationship)
 
 
 
@@ -276,7 +276,7 @@ namespace packages
         {
             // Get the Custom File Properties part from the package and
             // and then extract the XML from it.
-            PackagePart customPart = GetPackagePart(filePackage, OOXMLPackage.CUSTOM_PROPERTIES);
+            PackagePart customPart = GetPackagePartByRelationship(filePackage, OOXMLPackage.CUSTOM_PROPERTIES);
             XDocument customPartXML = OOXMLPackage.GetXMLFromPart(customPart);
             // Check to see whether document recalculation has already been 
             // set for this document. If it hasn't, use the integer
