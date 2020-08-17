@@ -62,7 +62,11 @@ namespace packages
                     PackageRelationshipCollection packageRelationships = packagePart.GetRelationships();
                     foreach (PackageRelationship packageRelationship in packageRelationships)
                     {
-                        Console.WriteLine("  Relationship Type: {0}", packageRelationship.RelationshipType.ToString());
+                        Console.WriteLine("  PackageRelationship: id {0}", packageRelationship.Id);
+                        Console.WriteLine("   Source URI  : {0}", packageRelationship.SourceUri);
+                        Console.WriteLine("   Target URI  : {0}", packageRelationship.TargetUri);
+                        Console.WriteLine("   Target Mode : {0}", packageRelationship.TargetMode);
+                        Console.WriteLine("   Relationship Type: {0}", packageRelationship.RelationshipType.ToString());
                     }
                 }
                 else
@@ -138,6 +142,7 @@ namespace packages
             }
             finally { }
         } // public static void CreateDirectory(string path)
+
         // get a specific PackagePart by its PackageRelationship (without having to iterate over all of the PackageParts)
         public static PackagePart GetPackagePart(Package filePackage, string relationship)
         {
