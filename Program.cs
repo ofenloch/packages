@@ -20,7 +20,8 @@ namespace packages
         {
             //string fileNameOrig = "./data/60489.vsdx";
             //string fileNameOrig = "data/hello-world-unsigned.docx";
-            string fileNameOrig = "./data/Visio Package.vsdx";
+            //string fileNameOrig = "./data/Visio Package.vsdx";
+            string fileNameOrig = "./data/PID12235.vsdm";
             string fileNameCopy = outputDirectory + Path.GetFileName(fileNameOrig);
             try
             {
@@ -35,6 +36,7 @@ namespace packages
                 {
                     // we need this only to get info or for debugging / testing
                     //IteratePackageParts(fPackage);
+                    OOXMLPackage.UnpackPackage(fPackage, fileNameCopy+".unpacked");
 
                     // Get a reference to the Visio Document part contained in the file package.
                     PackagePart documentPart = OOXMLPackage.GetPackagePart(fPackage, OOXMLPackage.VISIO_CORE_DOCUMENT);
