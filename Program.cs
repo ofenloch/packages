@@ -18,16 +18,24 @@ namespace packages
         static string outputDirectory = "./testoutput/";
         static void Main(string[] args)
         {
-            //string fileNameOrig = "./data/60489.vsdx";
-            //string fileNameOrig = "data/hello-world-unsigned.docx";
-            //string fileNameOrig = "./data/Visio Package.vsdx";
-            string fileNameOrig = "./data/PID12235.vsdm";
-            string fileNameCopy = outputDirectory + Path.GetFileName(fileNameOrig);
-            try
-            {
+            string fileNameOrig = "";
+            string fileNameCopy = "";
+            try {
+                // fileNameOrig = "./data/60489.vsdx";
+                // fileNameOrig = "data/hello-world-unsigned.docx";
+                // fileNameOrig = "./data/Visio Package.vsdx";
+                fileNameOrig = "./data/PID12235.vsdm";
+                fileNameCopy = outputDirectory + Path.GetFileName(fileNameOrig);
                 OOXMLPackage.CreateDirectory(outputDirectory);
                 File.Copy(fileNameOrig, fileNameCopy, true);
-                Console.WriteLine("Opening the Package in file \"{0}\" ...", fileNameCopy);
+            } catch (Exception e) {
+                Console.WriteLine("Could not open the Package in file \"{0}\" ...", fileNameOrig);
+                Console.WriteLine(e.Message);
+                return;
+            }
+            try
+            {
+                Console.WriteLine("Opening the Package in copied file \"{0}\" ...", fileNameCopy);
 
                 // We're not going to do any more than open
                 // and read the list of parts in the package, although
